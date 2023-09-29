@@ -1,0 +1,89 @@
+﻿@page "/"
+@using Frontend.Pages
+@attribute [Authorize]
+@using Frontend.Models.Comments;
+@inject IPostInterface postInterface
+@inject ICommentInterface commentInterface
+@inject IAuthInterface authInterface
+@inject NavigationManager navigationManager
+<div class="row">
+    <div class="col-2 d-none d-md-block">
+        <SideBar/>
+   </div>
+
+    <div class="col-5 " style="height:90vh; overflow-y:scroll;">
+        @if (isLoading)
+        {
+           <Spinner/>
+        }
+        else
+        {
+            <div>
+                @foreach (var post in Posts)
+                {
+                    <PostCard postDto="post" Viewpost="SelectPost" Users="Users"/>                  
+                    
+                }
+            </div>
+
+        }
+    </div>
+   
+
+    <div class="col-5">
+        @if (SelectedPost != null)
+        {
+            <ViewPost postDto="SelectedPost" Users="Users" DeletePost="DeletePost" />
+     
+    
+        }
+    </div>
+    
+   
+</div>
+
+@code {
+    private List<PostDto> Posts = new List<PostDto>();
+    private bool isLoading = true;
+
+
+    private PostDto? SelectedPost;
+    private List<UserDto> Users = new List<UserDto>();
+    private List<Comment> SelectedPostComments = new List<Comment>();
+    private Dictionary<Guid, Comment> postComments = new Dictionary<Guid, Comment>();
+    private UserDto? CommentUser;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        Posts = await postInterface.GetAllPostsAsync();
+        Users = await authInterface.GetUserAll();
+        isLoading = false;
+    }
+    //select a post to view details 
+    private async Task SelectPost(PostDto post)
+    {
+        SelectedPost = post;
+        var AllComments = await commentInterface.GetAllComments();
+        SelectedPostComments = AllComments.Where(c => c.PostId == post.postId).ToList();
+        SelectedPost.Comments = SelectedPostComments;
+
+    }
+    public async void DeletePost(Guid id)
+    {
+        await postInterface.DeletePostAsync(id);
+        Posts = await postInterface.GetAllPostsAsync();
+        SelectedPost = null;
+        StateHasChanged();
+        
+
+    }
+   
+ 
+
+   
+   
+   
+
+
+}

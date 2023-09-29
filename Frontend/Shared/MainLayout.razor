@@ -1,0 +1,35 @@
+﻿@inherits LayoutComponentBase
+@inject NavigationManager NavigationManager
+@inject AuthenticationStateProvider authProvider
+@inject NavigationManager navigationManager
+@inject ILocalStorageService localStorage
+
+<nav class="navbar navbar-light bg-white">
+    <div class="container-fluid">
+        <a class="navbar-brand text-black fw-bold" href="">SocialConnect.</a>
+        <form class="d-flex gap-4">
+            <CascadingAuthenticationState>
+                <AuthorizeView>
+                    <Authorized>
+                        <input class="form-control me-2 d-md-block d-none" type="search" placeholder="Search" aria-label="Search">
+                        <button class="btn btn-outline-danger text-black" @onclick="logout">Logout</button>
+                    </Authorized>
+
+                    <NotAuthorized>
+
+                        <button class="btn btn-outline-success text-black" @onclick="register">Register</button>
+                        <button class="btn btn-outline-success text-black" @onclick="login">Login</button>
+
+                    </NotAuthorized>
+                </AuthorizeView>
+            </CascadingAuthenticationState>
+
+        </form>
+    </div>
+</nav>
+<Spinner></Spinner>       
+ <main>
+      
+            @Body
+        
+ </main>

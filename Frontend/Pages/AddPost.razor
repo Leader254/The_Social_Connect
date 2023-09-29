@@ -1,0 +1,113 @@
+﻿@page "/CreatePost"
+@page "/editpost/{id}"
+@attribute [Authorize]
+@using Frontend.Models.Posts;
+@using Frontend.Services.Interfaces;
+@using Microsoft.AspNetCore.Authorization;
+@inject IPostInterface postInterface
+@inject NavigationManager navigationManager
+<div class="container2 m-3 shadow-lg p-3 mx-auto w-75 d-flex align-items-center border border-dark rounded" style="height: 80vh;">
+    <div class="row">
+    <div class="col-md-6">
+        @if (string.IsNullOrWhiteSpace(Post.Body))
+        {
+            <img class="w-100 h-100 d-none d-md-block" src="https://cdn.pixabay.com/photo/2016/12/21/00/36/woman-1921883_1280.jpg" />
+        }
+        else
+        {
+            <img class="w-100 h-100 d-none d-md-block" src="@Post.Body" />
+        }
+
+    </div>
+    <div class="col-md-6">
+        @if (string.IsNullOrWhiteSpace(Post.Title))
+        {
+            <h2 class="text-black p-2">Create Post</h2>
+        }
+        else
+        {
+            <h2 class="text-black p-2">Edit Post</h2>
+        }
+
+        <EditForm Model="@Post" OnValidSubmit="PostAction">
+            <DataAnnotationsValidator />
+
+            <div class="form-group p-2">
+                <label for="code">Caption</label>
+                <InputText type="text" class="form-control p-2" id="code" @bind-Value="@Post.Title" aria-describedby="name" />
+                <ValidationMessage For="@(()=>Post.Title)" />
+            </div>
+
+            <div class="form-group p-2">
+                <label for="amount">Photo</label>
+                <InputText class="form-control p-2" id="amount" @bind-Value="@Post.Body" aria-describedby="name" />
+                <ValidationMessage For="@(()=>Post.Body)" />
+            </div>
+            <div class="flex-row m-2 p-2">
+                @if(Post.postId == Guid.Empty)
+                {
+                    <button type="submit" style="width:100px" class=" p-2 m-1 btn btn-primary">Submit</button>
+                }
+                else
+                {
+                    <button type="submit" style="width:100px" class=" p-2 m-1 btn btn-primary">Edit</button>
+                }
+              
+               
+                <button type="button" @onclick="DiscardPost" style="width:100px" class="p-2 btn btn-secondary">Discard</button>
+            </div>
+
+        </EditForm>
+    </div>
+  </div>
+
+</div>
+
+@code {
+    [Parameter]
+    public string Id { get; set; }
+    private PostDto Post = new PostDto();
+
+    private async Task PostAction()
+    {
+        PostRequestDto postRequest = new PostRequestDto
+        {
+            Title=Post.Title,            
+            Body=Post.Body
+
+        };
+        if(Post.postId == Guid.Empty || Post.postId == null)
+        {
+            var res = await postInterface.AddPostAsync(postRequest);
+            if (res.Success)
+            {
+                Post = new PostDto();
+                navigationManager.NavigateTo("");
+            }
+        }
+        else
+        {
+            var res = await postInterface.UpdatePostAsync(Post.postId, postRequest);
+            if (res.Success)
+            {
+                Post = new PostDto();
+                navigationManager.NavigateTo("");
+            }
+        }
+
+
+    }
+    protected override async Task OnParametersSetAsync()
+    {
+        if (!string.IsNullOrWhiteSpace(Id))
+        {
+            var AllPosts = await postInterface.GetAllPostsAsync();
+            Post = AllPosts.FirstOrDefault(p => p.postId == Guid.Parse(Id));
+        }
+    }
+    public void DiscardPost()
+    {
+        Post = new PostDto();
+        navigationManager.NavigateTo("");
+    }
+}
